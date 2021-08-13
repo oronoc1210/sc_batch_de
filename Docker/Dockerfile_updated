@@ -1,0 +1,8 @@
+FROM oronoc1210/sc_batch_de
+
+# Install Bioconductor packages
+RUN Rscript -e 'BiocManager::install("zellkonverter")'
+
+
+# Install github packages
+RUN Rscript -e 'devtools::install_github(c("glmmTMB/glmmTMB/glmmTMB", "edvanburen/twosigma", "https://github.com/bioinfoDZ/RISC.git", "himelmallick/Tweedieverse"))'

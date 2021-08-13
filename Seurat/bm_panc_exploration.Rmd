@@ -1,0 +1,63 @@
+---
+title: "bm_seurat_bc"
+author: "Conor O'Donoghue"
+date: "7/12/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Testing shit in bm and pancreas data
+```{r}
+library(SingleCellExperiment)
+```
+
+```{r}
+bm_data <- readRDS(file="../Data/nuig_bone_marrow_data/nuig_bone_marrow.Rds")
+```
+
+```{r}
+library(Seurat)
+```
+
+```{r}
+bm_data_s <- as.Seurat(bm_data, counts="counts", data=NULL)
+```
+```{r}
+bm_data_s_list <- SplitObject(bm_data_s,split.by="sample")
+```
+
+```{r}
+bm_data_s_list <- lapply(X=bm_data_s_list, FUN=function(x){
+  x <- NormalizeData(x)
+  x <- FindVariableFeatures(x, selection.method="vst", nfeatures=2000)
+})
+```
+
+```{r}
+pancreas_bc <- readRDS(file="./pancreas_seurat_bc.rds")
+```
+
+```{r}
+pancreas_bc
+unique(pancreas_bc$celltype)
+```
+
+```{r}
+pancreas_seurat_markers <- lapply(X=unique(pancreas_bc$celltype), FUN=function(x){
+  print(paste('pancreas_seurat_', x, "_de_markers.csv", sep=''))
+})
+```
+
+```{r}
+library(Seurat)
+cell='gamma'
+```
+
+```{r}
+pancreas_gamma_de_markers <- FindMarkers(pancreas_bc, ident.1=cell, ident.2=NULL)
+head(pancreas_gamma_de_markers)
+```
+

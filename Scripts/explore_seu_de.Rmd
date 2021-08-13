@@ -1,0 +1,17 @@
+---
+title: "explore_seu_de"
+author: "Conor O'Donoghue"
+date: "7/14/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Seurat de
+```{r}
+library(SingleCellExperiment)
+library(Seurat)
+```
+

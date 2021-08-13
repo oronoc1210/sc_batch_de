@@ -1,0 +1,86 @@
+---
+title: "Seurat_pancreas"
+author: "Conor O'Donoghue"
+date: "7/8/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+Reading in Pancreas data rds files, separating by sequencing platform with Seurat, and then 
+writing to 4 individual expression matrices for use with other batch correction software.
+
+```{r}
+pancreas_data <- readRDS(file="../Data/pancreas_v3_files/pancreas_expression_matrix.rds")
+metadata <- readRDS(file="../Data/pancreas_v3_files/pancreas_metadata.rds")
+```
+
+```{r}
+library(Seurat)
+pancreas <- CreateSeuratObject(pancreas_data, meta.data=metadata)
+```
+
+```{r}
+pancreas_list <- SplitObject(pancreas,split.by="tech")
+```
+
+```{r}
+pancreas_list <- lapply(X=pancreas_list, FUN=function(x){
+  x <- NormalizeData(x)
+  x <- FindVariableFeatures(x, selection.method="vst", nfeatures=2000)
+})
+```
+```{r}
+features <- SelectIntegrationFeatures(object.list = pancreas_list)
+```
+
+```{r}
+pancreas_anchors <- FindIntegrationAnchors(object.list=pancreas_list, anchor.features=features)
+```
+
+```{r}
+pancreas_combined <- IntegrateData(anchorset=pancreas_anchors)
+```
+```{r}
+DefaultAssay(pancreas_combined) <- "integrated"
+pancreas_combined <- ScaleData(pancreas_combined, verbose=FALSE)
+```
+
+```{r}
+pancreas_combined <- RunPCA(pancreas_combined, verbose=FALSE)
+ElbowPlot(pancreas_combined)
+```
+
+
+```{r}
+pancreas_combined <- FindNeighbors(pancreas_combined, reduction="pca", dims=1:20)
+```
+
+```{r}
+pancreas_combined <- FindClusters(pancreas_combined, resolution=0.5)
+```
+
+```{r}
+pancreas_combined <- RunUMAP(pancreas_combined, reduction="pca", dims=1:20)
+DimPlot(pancreas_combined, reduction="umap")
+```
+
+```{r}
+saveRDS(pancreas_combined, file="pancreas_seurat_bc.rds")
+```
+
+```{r}
+library(ggplot2)
+library(cowplot)
+```
+
+```{r}
+p1 <- DimPlot(pancreas_combined, reduction='umap', group.by="tech")
+p2 <- DimPlot(pancreas_combined, reduction='umap', group.by="celltype", label=TRUE)
+plot_grid(p1,p2)
+```
+
